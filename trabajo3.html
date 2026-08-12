@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Estudiantes - Versión Aprendizaje</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .form-container {
+            max-width: 450px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-nuevo { background-color: #007bff; }
+        .btn-guardar { background-color: #28a745; }
+        .btn-cancelar { background-color: #17a2b8; }
+        .btn-eliminar { background-color: #dc3545; }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #333;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #e9ecef;
+        }
+        /* Cambia de color cuando los inputs están habilitados */
+        input:not(:disabled), select:not(:disabled) {
+            background-color: #fff;
+        }
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .radio-label, .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            color: #333;
+            cursor: pointer;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .btn-nav {
+            background-color: #343a40;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-nav:hover {
+            background-color: #23272b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <!-- Botones de Acción Superior -->
+    <div class="action-buttons">
+        <button type="button" class="btn btn-nuevo" id="btnNuevo">Nuevo</button>
+        <button type="button" class="btn btn-guardar" id="btnGuardar" disabled>Guardar</button>
+        <button type="button" class="btn btn-cancelar" id="btnCancelar" disabled>Cancelar</button>
+        <button type="button" class="btn btn-eliminar" id="btnEliminar">Eliminar</button>
+    </div>
+
+    <!-- Formulario de Estudiantes -->
+    <form id="studentForm">
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" disabled required>
+        </div>
+
+        <div class="form-group">
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" disabled required>
+        </div>
+
+        <div class="form-group">
+            <label for="carrera">Carrera</label>
+            <select id="carrera" disabled required>
+                <option value="">Seleccione</option>
+                <option value="Ingeniería en Sistemas">Ingeniería en Sistemas</option>
+                <option value="Derecho">Derecho</option>
+                <option value="Administración de Empresas">Administración de Empresas</option>
+                <option value="Contaduría Pública">Contaduría Pública</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Sexo:</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="sexo" value="Masculino" disabled> Masculino
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="sexo" value="Femenino" disabled> Femenino
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="egresado" disabled> ¿Egresado?
+                </label>
+            </div>
+        </div>
+    </form>
+
+    <!-- Botones de Navegación Inferior -->
+    <div class="nav-buttons">
+        <button type="button" class="btn-nav" id="btnFirst">&lt;&lt;</button>
+        <button type="button" class="btn-nav" id="btnPrev">&lt;</button>
+        <button type="button" class="btn-nav" id="btnNext">&gt;</button>
+        <button type="button" class="btn-nav" id="btnLast">&gt;&gt;</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. VARIABLES GLOBALES (El estado de la app)
+    // ==========================================
+    let estudiantes = [];      // Arreglo donde guardaremos los objetos estudiantes
+    let indiceActual = 0;      // Controla qué posición del arreglo estamos visualizando actualmente
+
+    // ==========================================
+    // 2. CAPTURA DE ELEMENTOS DEL DOM
+    // ==========================================
+    const inputNombre = document.getElementById('nombre');
+    const inputApellido = document.getElementById('apellido');
+    const selectCarrera = document.getElementById('carrera');
+    const radiosSexo = document.getElementsByName('sexo');
+    const checkEgresado = document.getElementById('egresado');
+
+    const btnNuevo = document.getElementById('btnNuevo');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const btnCancelar = document.getElementById('btnCancelar');
+    const btnEliminar = document.getElementById('btnEliminar');
+
+    const btnFirst = document.getElementById('btnFirst');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnLast = document.getElementById('btnLast');
+
+    // ==========================================
+    // 3. FUNCIONES DE APOYO (UX Y LÓGICA)
+    // ==========================================
+
+    // Función para bloquear o desbloquear controles según el estado del proceso
+    function controlarControles(habilitar) {
+        inputNombre.disabled = !habilitar;
+        inputApellido.disabled = !habilitar;
+        selectCarrera.disabled = !habilitar;
+        radiosSexo.forEach(r => r.disabled = !habilitar);
+        checkEgresado.disabled = !habilitar;
+
+        // Alternar también los botones de acción principal
+        btnNuevo.disabled = habilitar;
+        btnGuardar.disabled = !habilitar;
+        btnCancelar.disabled = !habilitar;
+    }
+
+    // Función para limpiar los campos de texto y selecciones
+    function limpiarFormulario() {
+        inputNombre.value = '';
+        inputApellido.value = '';
+        selectCarrera.value = '';
+        radiosSexo.forEach(r => r.checked = false);
+        checkEgresado.checked = false;
+    }
+
+    // Función para pintar en pantalla los datos del estudiante ubicado en 'indiceActual'
+    function mostrarEstudiante() {
+        if (estudiantes.length === 0) {
+            limpiarFormulario();
+            return;
+        }
+        const est = estudiantes[indiceActual];
+        inputNombre.value = est.nombre;
+        inputApellido.value = est.apellido;
+        selectCarrera.value = est.carrera;
+        
+        // Recorremos los radio buttons para marcar el que coincida
+        radiosSexo.forEach(r => {
+            r.checked = (r.value === est.sexo);
+        });
+        
+        checkEgresado.checked = est.egresado;
+    }
+
+    // ==========================================
+    // 4. EVENTOS DE LOS BOTONES SUPERIORES
+    // ==========================================
+
+    // Botón NUEVO: Limpia y desbloquea el formulario para redactar un registro
+    btnNuevo.addEventListener('click', () => {
+        limpiarFormulario();
+        controlarControles(true);
+        inputNombre.focus(); // Coloca el cursor directamente en el nombre
+    });
+
+    // Botón CANCELAR: Aborta la creación, bloquea controles y regresa a la última posición
+    btnCancelar.addEventListener('click', () => {
+        controlarControles(false);
+        if (estudiantes.length > 0) {
+            indiceActual = estudiantes.length - 1; // Ubicarse en la última posición
+            mostrarEstudiante();
+        } else {
+            limpiarFormulario();
+        }
+    });
+
+    // Botón GUARDAR: Toma los datos del formulario, crea un objeto y lo añade al arreglo
+    btnGuardar.addEventListener('click', () => {
+        // Validación básica de campos vacíos
+        if (!inputNombre.value || !inputApellido.value || !selectCarrera.value) {
+            alert("Por favor, completa los campos obligatorios.");
+            return;
+        }
+
+        // Obtener el valor del radio button seleccionado
+        let sexoSeleccionado = '';
+        radiosSexo.forEach(r => {
+            if (r.checked) sexoSeleccionado = r.value;
+        });
+
+        // Crear el objeto estudiante
+        const nuevoEstudiante = {
+            nombre: inputNombre.value,
+            apellido: inputApellido.value,
+            carrera: selectCarrera.value,
+            sexo: sexoSeleccionado,
+            egresado: checkEgresado.checked
+        };
+
+        // Agregar al arreglo (.push)
+        estudiantes.push(nuevoEstudiante);
+        indiceActual = estudiantes.length - 1; // Apuntar al elemento recién agregado
+
+        // Bloquear controles de nuevo y notificar
+        controlarControles(false);
+        alert("¡Estudiante guardado con éxito!");
+    });
+
+    // Botón ELIMINAR: Borra el elemento actual del arreglo usando su índice (.splice)
+    btnEliminar.addEventListener('click', () => {
+        if (estudiantes.length === 0) {
+            alert("No hay registros guardados para eliminar.");
+            return;
+        }
+
+        if (confirm("¿Estás seguro de eliminar este registro del sistema?")) {
+            estudiantes.splice(indiceActual, 1); // Elimina 1 elemento en la posición actual
+
+            // Ajustar el índice si nos pasamos del límite
+            if (indiceActual >= estudiantes.length && estudiantes.length > 0) {
+                indiceActual = estudiantes.length - 1;
+            }
+
+            mostrarEstudiante();
+            alert("Registro eliminado correctamente.");
+        }
+    });
+
+    // ==========================================
+    // 5. EVENTOS DE NAVEGACIÓN (BOTONES INFERIORES)
+    // ==========================================
+
+    // Ir al primer registro (<<)
+    btnFirst.addEventListener('click', () => {
+        if (estudiantes.length > 0) {
+            indiceActual = 0;
+            mostrarEstudiante();
+        }
+    });
+
+    // Ir al registro anterior (<)
+    btnPrev.addEventListener('click', () => {
+        if (indiceActual > 0) {
+            indiceActual--;
+            mostrarEstudiante();
+        }
+    });
+
+    // Ir al registro siguiente (>)
+    btnNext.addEventListener('click', () => {
+        if (indiceActual < estudiantes.length - 1) {
+            indiceActual++;
+            mostrarEstudiante();
+        }
+    });
+
+    // Ir al último registro (>>)
+    btnLast.addEventListener('click', () => {
+        if (estudiantes.length > 0) {
+            indiceActual = estudiantes.length - 1;
+            mostrarEstudiante();
+        }
+    });
+</script>
+
+</body>
+</html>
